@@ -11,6 +11,8 @@
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <IsAotCompatible>false</IsAotCompatible>
 	  <IsTrimmable>false</IsTrimmable>
+    <!-- Vendored upstream fork: silence its compiler warnings so the app build stays readable. -->
+    <WarningLevel>0</WarningLevel>
     <PackageReadmeFile>README-packages.md</PackageReadmeFile>
   </PropertyGroup>
 
