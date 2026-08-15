@@ -12,6 +12,8 @@ namespace Microsoft.Xna.Framework.Graphics
 
 		private readonly Shader _pixelShader;
         private readonly Shader _vertexShader;
+        private readonly Shader _hullShader;
+        private readonly Shader _domainShader;
 
         private readonly BlendState _blendState;
         private readonly DepthStencilState _depthStencilState;
@@ -29,9 +31,11 @@ namespace Microsoft.Xna.Framework.Graphics
 
         internal EffectPass(    Effect effect, 
                                 string name,
-                                Shader vertexShader, 
-                                Shader pixelShader, 
-                                BlendState blendState, 
+                                Shader vertexShader,
+                                Shader pixelShader,
+                                Shader hullShader,
+                                Shader domainShader,
+                                BlendState blendState,
                                 DepthStencilState depthStencilState, 
                                 RasterizerState rasterizerState,
                                 EffectAnnotationCollection annotations )
@@ -45,6 +49,8 @@ namespace Microsoft.Xna.Framework.Graphics
 
             _vertexShader = vertexShader;
             _pixelShader = pixelShader;
+            _hullShader = hullShader;
+            _domainShader = domainShader;
 
             _blendState = blendState;
             _depthStencilState = depthStencilState;
@@ -68,6 +74,8 @@ namespace Microsoft.Xna.Framework.Graphics
             Annotations = cloneSource.Annotations;
             _vertexShader = cloneSource._vertexShader;
             _pixelShader = cloneSource._pixelShader;
+            _hullShader = cloneSource._hullShader;
+            _domainShader = cloneSource._domainShader;
         }
 
         /// <summary>
@@ -116,6 +124,32 @@ namespace Microsoft.Xna.Framework.Graphics
                     var cb = _effect.ConstantBuffers[_pixelShader.CBuffers[c]];
                     cb.Update(_effect.Parameters);
                     device.SetConstantBuffer(ShaderStage.Pixel, c, cb);
+                }
+            }
+
+            device.HullShader = _hullShader;
+            if (_hullShader != null)
+            {
+                SetShaderSamplers(_hullShader, device.HullTextures, device.HullSamplerStates);
+
+                for (var c = 0; c < _hullShader.CBuffers.Length; c++)
+                {
+                    var cb = _effect.ConstantBuffers[_hullShader.CBuffers[c]];
+                    cb.Update(_effect.Parameters);
+                    device.SetConstantBuffer(ShaderStage.Hull, c, cb);
+                }
+            }
+
+            device.DomainShader = _domainShader;
+            if (_domainShader != null)
+            {
+                SetShaderSamplers(_domainShader, device.DomainTextures, device.DomainSamplerStates);
+
+                for (var c = 0; c < _domainShader.CBuffers.Length; c++)
+                {
+                    var cb = _effect.ConstantBuffers[_domainShader.CBuffers[c]];
+                    cb.Update(_effect.Parameters);
+                    device.SetConstantBuffer(ShaderStage.Domain, c, cb);
                 }
             }
 

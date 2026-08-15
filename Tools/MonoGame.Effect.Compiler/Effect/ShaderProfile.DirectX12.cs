@@ -28,6 +28,9 @@ namespace MonoGame.Effect
 
         internal override void ValidateShaderModels(MonoGame.Effect.TPGParser.PassInfo pass)
         {
+            if (!string.IsNullOrEmpty(pass.hsFunction) || !string.IsNullOrEmpty(pass.dsFunction))
+                throw new NotSupportedException("Hull and domain shaders are currently only supported by the DirectX_11 profile.");
+
             if (!string.IsNullOrEmpty(pass.vsFunction))
             {
                 if (pass.vsModel != "vs_6_0")
@@ -47,8 +50,9 @@ namespace MonoGame.Effect
         private static readonly Regex ResourceTexture = new Regex(@";[\W]+(?<ResName>[\S]+)[\W]+texture[\W]+(?<ResFormat>[\S]+)[\W]+(?<ResDim>[\S]+)[\W]+[\S]+[\W]+t(?<ResBind>[\d]*)[\W]+(?<ResCount>[\d]*)", RegexOptions.Compiled);
         private static readonly Regex InputAttribute = new Regex(@"; (\w+)\s+(\d+)\s+([xyzw]+)\s+(\d+)\s+(\w+)\s+(\w+)\s+([xyzw]+)", RegexOptions.Multiline | RegexOptions.Compiled);
 
-        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings)
+        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, ShaderStage shaderStage, EffectObject effect, ref string errorsAndWarnings)
         {
+            var isVertexShader = shaderStage == ShaderStage.Vertex;
             var inputFile = Path.GetTempFileName();
             var outputFile = Path.GetTempFileName();
 
@@ -126,7 +130,7 @@ namespace MonoGame.Effect
             }
 
             // Create a new shader.
-            var shaderData = new ShaderData(isVertexShader, effect.Shaders.Count, bytecode);
+            var shaderData = new ShaderData(shaderStage, effect.Shaders.Count, bytecode);
             shaderData.ShaderCode = shaderData.Bytecode;
 
             // Gather the input attributes.

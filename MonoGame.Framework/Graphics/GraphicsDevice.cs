@@ -98,9 +98,29 @@ namespace Microsoft.Xna.Framework.Graphics
         public TextureCollection VertexTextures { get; private set; }
 
         /// <summary>
+        /// Gets the textures assigned to the hull shader stage.
+        /// </summary>
+        public TextureCollection HullTextures { get; private set; }
+
+        /// <summary>
+        /// Gets the textures assigned to the domain shader stage.
+        /// </summary>
+        public TextureCollection DomainTextures { get; private set; }
+
+        /// <summary>
         /// Returns the collection of vertex sampler states.
         /// </summary>
         public SamplerStateCollection VertexSamplerStates { get; private set; }
+
+        /// <summary>
+        /// Gets the sampler states assigned to the hull shader stage.
+        /// </summary>
+        public SamplerStateCollection HullSamplerStates { get; private set; }
+
+        /// <summary>
+        /// Gets the sampler states assigned to the domain shader stage.
+        /// </summary>
+        public SamplerStateCollection DomainSamplerStates { get; private set; }
 
         /// <summary>
         /// Returns the collection of textures that have been assigned to the texture stages of the device.
@@ -140,8 +160,24 @@ namespace Microsoft.Xna.Framework.Graphics
             get { return _pixelShaderDirty; }
         }
 
+        private Shader _hullShader;
+        private bool _hullShaderDirty;
+        private bool HullShaderDirty
+        {
+            get { return _hullShaderDirty; }
+        }
+
+        private Shader _domainShader;
+        private bool _domainShaderDirty;
+        private bool DomainShaderDirty
+        {
+            get { return _domainShaderDirty; }
+        }
+
         private readonly ConstantBufferCollection _vertexConstantBuffers = new ConstantBufferCollection(ShaderStage.Vertex, 16);
         private readonly ConstantBufferCollection _pixelConstantBuffers = new ConstantBufferCollection(ShaderStage.Pixel, 16);
+        private readonly ConstantBufferCollection _hullConstantBuffers = new ConstantBufferCollection(ShaderStage.Hull, 16);
+        private readonly ConstantBufferCollection _domainConstantBuffers = new ConstantBufferCollection(ShaderStage.Domain, 16);
 
         /// <summary>
         /// The cache of effects from unique byte streams.
@@ -350,6 +386,12 @@ namespace Microsoft.Xna.Framework.Graphics
             VertexTextures = new TextureCollection(this, MaxVertexTextureSlots, ShaderStage.Vertex);
             VertexSamplerStates = new SamplerStateCollection(this, MaxVertexTextureSlots, ShaderStage.Vertex);
 
+            HullTextures = new TextureCollection(this, MaxVertexTextureSlots, ShaderStage.Hull);
+            HullSamplerStates = new SamplerStateCollection(this, MaxVertexTextureSlots, ShaderStage.Hull);
+
+            DomainTextures = new TextureCollection(this, MaxVertexTextureSlots, ShaderStage.Domain);
+            DomainSamplerStates = new SamplerStateCollection(this, MaxVertexTextureSlots, ShaderStage.Domain);
+
             Textures = new TextureCollection(this, MaxTextureSlots, ShaderStage.Pixel);
             SamplerStates = new SamplerStateCollection(this, MaxTextureSlots, ShaderStage.Pixel);
 
@@ -418,12 +460,18 @@ namespace Microsoft.Xna.Framework.Graphics
             // the state to be reapplied.
             VertexTextures.Clear();
             VertexSamplerStates.Clear();
+            HullTextures.Clear();
+            HullSamplerStates.Clear();
+            DomainTextures.Clear();
+            DomainSamplerStates.Clear();
             Textures.Clear();
             SamplerStates.Clear();
 
             // Clear constant buffers
             _vertexConstantBuffers.Clear();
             _pixelConstantBuffers.Clear();
+            _hullConstantBuffers.Clear();
+            _domainConstantBuffers.Clear();
 
             // Force set the buffers and shaders on next ApplyState() call
             _vertexBuffers = new VertexBufferBindings(_maxVertexBufferSlots);
@@ -431,6 +479,8 @@ namespace Microsoft.Xna.Framework.Graphics
             _indexBufferDirty = true;
             _vertexShaderDirty = true;
             _pixelShaderDirty = true;
+            _hullShaderDirty = true;
+            _domainShaderDirty = true;
 
             // Set the default scissor rect.
             _scissorRectangleDirty = true;
@@ -1175,12 +1225,53 @@ namespace Microsoft.Xna.Framework.Graphics
             }
         }
 
+        internal Shader HullShader
+        {
+            get { return _hullShader; }
+            set
+            {
+                if (_hullShader == value)
+                    return;
+
+                _hullShader = value;
+                _hullConstantBuffers.Clear();
+                _hullShaderDirty = true;
+            }
+        }
+
+        internal Shader DomainShader
+        {
+            get { return _domainShader; }
+            set
+            {
+                if (_domainShader == value)
+                    return;
+
+                _domainShader = value;
+                _domainConstantBuffers.Clear();
+                _domainShaderDirty = true;
+            }
+        }
+
         internal void SetConstantBuffer(ShaderStage stage, int slot, ConstantBuffer buffer)
         {
-            if (stage == ShaderStage.Vertex)
-                _vertexConstantBuffers[slot] = buffer;
-            else
-                _pixelConstantBuffers[slot] = buffer;
+            switch (stage)
+            {
+                case ShaderStage.Vertex:
+                    _vertexConstantBuffers[slot] = buffer;
+                    break;
+                case ShaderStage.Pixel:
+                    _pixelConstantBuffers[slot] = buffer;
+                    break;
+                case ShaderStage.Hull:
+                    _hullConstantBuffers[slot] = buffer;
+                    break;
+                case ShaderStage.Domain:
+                    _domainConstantBuffers[slot] = buffer;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("stage");
+            }
         }
 
         /// <summary>
@@ -1642,6 +1733,8 @@ namespace Microsoft.Xna.Framework.Graphics
                     return primitiveCount + 2;
                 case PrimitiveType.PointList:
                     return primitiveCount;
+                case PrimitiveType.PatchListWith4ControlPoints:
+                    return primitiveCount * 4;
             }
 
             throw new NotSupportedException();

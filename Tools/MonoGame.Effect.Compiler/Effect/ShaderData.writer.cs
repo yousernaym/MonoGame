@@ -6,7 +6,7 @@ namespace MonoGame.Effect
     {
         public void Write(BinaryWriter writer, Options options)
         {
-            writer.Write(IsVertexShader);
+            writer.Write((byte)Stage);
 
             writer.Write(SourceFile ?? "<unknown>");
             writer.Write(Entrypoint ?? "<unknown>");

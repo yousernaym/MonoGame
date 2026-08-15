@@ -650,6 +650,8 @@ namespace Microsoft.Xna.Framework.Graphics
             lock (_d3dContext)
             {
                 VertexTextures.ClearTargets(this, _currentRenderTargetBindings);
+                HullTextures.ClearTargets(this, _currentRenderTargetBindings);
+                DomainTextures.ClearTargets(this, _currentRenderTargetBindings);
                 Textures.ClearTargets(this, _currentRenderTargetBindings);
             }
 
@@ -685,9 +687,28 @@ namespace Microsoft.Xna.Framework.Graphics
                     return PrimitiveTopology.TriangleStrip;
                 case PrimitiveType.PointList:
                     return PrimitiveTopology.PointList;
+                case PrimitiveType.PatchListWith4ControlPoints:
+                    return PrimitiveTopology.PatchListWith4ControlPoints;
             }
 
             throw new ArgumentException();
+        }
+
+        internal CommonShaderStage GetDXShaderStage(ShaderStage stage)
+        {
+            switch (stage)
+            {
+                case ShaderStage.Vertex:
+                    return _d3dContext.VertexShader;
+                case ShaderStage.Pixel:
+                    return _d3dContext.PixelShader;
+                case ShaderStage.Hull:
+                    return _d3dContext.HullShader;
+                case ShaderStage.Domain:
+                    return _d3dContext.DomainShader;
+                default:
+                    throw new ArgumentOutOfRangeException("stage");
+            }
         }
 
         internal void PlatformBeginApplyState()
@@ -777,6 +798,8 @@ namespace Microsoft.Xna.Framework.Graphics
                 throw new InvalidOperationException("A vertex shader must be set!");
             if (_pixelShader == null)
                 throw new InvalidOperationException("A pixel shader must be set!");
+            if ((_hullShader == null) != (_domainShader == null))
+                throw new InvalidOperationException("Hull and domain shaders must be set together.");
 
             if (_vertexShaderDirty)
             {
@@ -804,13 +827,31 @@ namespace Microsoft.Xna.Framework.Graphics
                 }
             }
 
+            if (_hullShaderDirty)
+            {
+                _d3dContext.HullShader.Set(_hullShader == null ? null : _hullShader.HullShader);
+                _hullShaderDirty = false;
+            }
+
+            if (_domainShaderDirty)
+            {
+                _d3dContext.DomainShader.Set(_domainShader == null ? null : _domainShader.DomainShader);
+                _domainShaderDirty = false;
+            }
+
             _vertexConstantBuffers.SetConstantBuffers(this);
             _pixelConstantBuffers.SetConstantBuffers(this);
+            _hullConstantBuffers.SetConstantBuffers(this);
+            _domainConstantBuffers.SetConstantBuffers(this);
 
             VertexTextures.SetTextures(this);
             VertexSamplerStates.PlatformSetSamplers(this);
             Textures.SetTextures(this);
             SamplerStates.PlatformSetSamplers(this);
+            HullTextures.SetTextures(this);
+            HullSamplerStates.PlatformSetSamplers(this);
+            DomainTextures.SetTextures(this);
+            DomainSamplerStates.PlatformSetSamplers(this);
         }
 
         private int SetUserVertexBuffer<T>(T[] vertexData, int vertexOffset, int vertexCount, VertexDeclaration vertexDecl)

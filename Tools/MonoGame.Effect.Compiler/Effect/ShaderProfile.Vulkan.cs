@@ -30,6 +30,9 @@ namespace MonoGame.Effect
 
         internal override void ValidateShaderModels(PassInfo pass)
         {
+            if (!string.IsNullOrEmpty(pass.hsFunction) || !string.IsNullOrEmpty(pass.dsFunction))
+                throw new NotSupportedException("Hull and domain shaders are currently only supported by the DirectX_11 profile.");
+
             if (!string.IsNullOrEmpty(pass.vsFunction))
             {
                 if (pass.vsModel != "vs_6_0")
@@ -136,8 +139,9 @@ namespace MonoGame.Effect
             public nint pImmutableSamplers;
         };
         
-        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings)
+        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, ShaderStage shaderStage, EffectObject effect, ref string errorsAndWarnings)
         {
+            var isVertexShader = shaderStage == ShaderStage.Vertex;
             const int SlotOffset = 32;
 
             var outputPath = Path.GetDirectoryName(shaderResult.OutputFilePath);
@@ -260,7 +264,7 @@ namespace MonoGame.Effect
                 }
 
                 // Create a new shader.
-                var shaderData = new ShaderData(isVertexShader, effect.Shaders.Count, bytecode);
+                var shaderData = new ShaderData(shaderStage, effect.Shaders.Count, bytecode);
 
                 // Gather all the vulkan reflection info.
                 var reader = new StringReader(reflectionData);

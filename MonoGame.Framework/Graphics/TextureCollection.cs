@@ -36,7 +36,7 @@ namespace Microsoft.Xna.Framework.Graphics
             }
             set
             {
-                if (_stage == ShaderStage.Vertex && !_graphicsDevice.GraphicsCapabilities.SupportsVertexTextures)
+                if (_stage != ShaderStage.Pixel && !_graphicsDevice.GraphicsCapabilities.SupportsVertexTextures)
                     throw new NotSupportedException("Vertex textures are not supported on this device.");
 
                 if (_textures[index] == value)
@@ -66,7 +66,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
         internal void SetTextures(GraphicsDevice device)
         {
-            if (_stage == ShaderStage.Vertex && !device.GraphicsCapabilities.SupportsVertexTextures)
+            if (_stage != ShaderStage.Pixel && !device.GraphicsCapabilities.SupportsVertexTextures)
                 return;
 
             PlatformSetTextures(device);

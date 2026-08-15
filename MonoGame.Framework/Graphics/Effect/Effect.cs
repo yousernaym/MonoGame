@@ -29,7 +29,7 @@ namespace Microsoft.Xna.Framework.Graphics
             /// We should avoid supporting old versions for very long if at all 
             /// as users should be rebuilding content when packaging their game.
             /// </remarks>
-            public const int MGFXVersion = 11;
+            public const int MGFXVersion = 12;
 
             /// <summary>
             /// This is the minimum version of MGFX file we can support
@@ -316,7 +316,7 @@ namespace Microsoft.Xna.Framework.Graphics
             {
                 var name = reader.ReadString();
                 var annotations = ReadAnnotations(reader);
-                var passes = ReadPasses(reader, this, _shaders);
+                var passes = ReadPasses(reader, this, _shaders, header.Version);
 
                 techniques[t] = new EffectTechnique(this, name, passes, annotations);
             }
@@ -339,7 +339,7 @@ namespace Microsoft.Xna.Framework.Graphics
             return new EffectAnnotationCollection(annotations);
         }
 
-        private static EffectPassCollection ReadPasses(BinaryReader reader, Effect effect, Shader[] shaders)
+        private static EffectPassCollection ReadPasses(BinaryReader reader, Effect effect, Shader[] shaders, int version)
         {
             var passes = new EffectPass[reader.ReadInt32()];
 
@@ -355,6 +355,17 @@ namespace Microsoft.Xna.Framework.Graphics
                 // Get the pixel shader.
                 shaderIndex = reader.ReadInt32();
                 Shader pixelShader = shaderIndex < 0 ? null : shaders[shaderIndex];
+
+                Shader hullShader = null;
+                Shader domainShader = null;
+                if (version >= 12)
+                {
+                    shaderIndex = reader.ReadInt32();
+                    hullShader = shaderIndex < 0 ? null : shaders[shaderIndex];
+
+                    shaderIndex = reader.ReadInt32();
+                    domainShader = shaderIndex < 0 ? null : shaders[shaderIndex];
+                }
 
 				BlendState blend = null;
 				DepthStencilState depth = null;
@@ -412,7 +423,7 @@ namespace Microsoft.Xna.Framework.Graphics
 					};
 				}
 
-                passes[i] = new EffectPass(effect, name, vertexShader, pixelShader, blend, depth, raster, annotations);
+                passes[i] = new EffectPass(effect, name, vertexShader, pixelShader, hullShader, domainShader, blend, depth, raster, annotations);
 			}
 
             return new EffectPassCollection(passes);

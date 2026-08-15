@@ -44,10 +44,7 @@ namespace Microsoft.Xna.Framework.Graphics
             }
             
             // Set the buffer to the right stage.
-            if (stage == ShaderStage.Vertex)
-                d3dContext.VertexShader.SetConstantBuffer(slot, _cbuffer);
-            else
-                d3dContext.PixelShader.SetConstantBuffer(slot, _cbuffer);
+            device.GetDXShaderStage(stage).SetConstantBuffer(slot, _cbuffer);
         }
 
         protected override void Dispose(bool disposing)

@@ -2537,9 +2537,11 @@ namespace MonoGame.Effect.TPGParser
             }
 
              // Concat Rule
-            tok = scanner.LookAhead(TokenType.VertexShader, TokenType.PixelShader, TokenType.CullMode, TokenType.FillMode, TokenType.AlphaBlendEnable, TokenType.SrcBlend, TokenType.DestBlend, TokenType.BlendOp, TokenType.ColorWriteEnable, TokenType.DepthBias, TokenType.SlopeScaleDepthBias, TokenType.ZEnable, TokenType.ZWriteEnable, TokenType.ZFunc, TokenType.MultiSampleAntiAlias, TokenType.ScissorTestEnable, TokenType.StencilEnable, TokenType.StencilFail, TokenType.StencilFunc, TokenType.StencilMask, TokenType.StencilPass, TokenType.StencilRef, TokenType.StencilWriteMask, TokenType.StencilZFail); // ZeroOrMore Rule
+            tok = scanner.LookAhead(TokenType.VertexShader, TokenType.PixelShader, TokenType.HullShader, TokenType.DomainShader, TokenType.CullMode, TokenType.FillMode, TokenType.AlphaBlendEnable, TokenType.SrcBlend, TokenType.DestBlend, TokenType.BlendOp, TokenType.ColorWriteEnable, TokenType.DepthBias, TokenType.SlopeScaleDepthBias, TokenType.ZEnable, TokenType.ZWriteEnable, TokenType.ZFunc, TokenType.MultiSampleAntiAlias, TokenType.ScissorTestEnable, TokenType.StencilEnable, TokenType.StencilFail, TokenType.StencilFunc, TokenType.StencilMask, TokenType.StencilPass, TokenType.StencilRef, TokenType.StencilWriteMask, TokenType.StencilZFail); // ZeroOrMore Rule
             while (tok.Type == TokenType.VertexShader
                 || tok.Type == TokenType.PixelShader
+                || tok.Type == TokenType.HullShader
+                || tok.Type == TokenType.DomainShader
                 || tok.Type == TokenType.CullMode
                 || tok.Type == TokenType.FillMode
                 || tok.Type == TokenType.AlphaBlendEnable
@@ -2563,7 +2565,7 @@ namespace MonoGame.Effect.TPGParser
                 || tok.Type == TokenType.StencilWriteMask
                 || tok.Type == TokenType.StencilZFail)
             {
-                tok = scanner.LookAhead(TokenType.VertexShader, TokenType.PixelShader, TokenType.CullMode, TokenType.FillMode, TokenType.AlphaBlendEnable, TokenType.SrcBlend, TokenType.DestBlend, TokenType.BlendOp, TokenType.ColorWriteEnable, TokenType.DepthBias, TokenType.SlopeScaleDepthBias, TokenType.ZEnable, TokenType.ZWriteEnable, TokenType.ZFunc, TokenType.MultiSampleAntiAlias, TokenType.ScissorTestEnable, TokenType.StencilEnable, TokenType.StencilFail, TokenType.StencilFunc, TokenType.StencilMask, TokenType.StencilPass, TokenType.StencilRef, TokenType.StencilWriteMask, TokenType.StencilZFail); // Choice Rule
+                tok = scanner.LookAhead(TokenType.VertexShader, TokenType.PixelShader, TokenType.HullShader, TokenType.DomainShader, TokenType.CullMode, TokenType.FillMode, TokenType.AlphaBlendEnable, TokenType.SrcBlend, TokenType.DestBlend, TokenType.BlendOp, TokenType.ColorWriteEnable, TokenType.DepthBias, TokenType.SlopeScaleDepthBias, TokenType.ZEnable, TokenType.ZWriteEnable, TokenType.ZFunc, TokenType.MultiSampleAntiAlias, TokenType.ScissorTestEnable, TokenType.StencilEnable, TokenType.StencilFail, TokenType.StencilFunc, TokenType.StencilMask, TokenType.StencilPass, TokenType.StencilRef, TokenType.StencilWriteMask, TokenType.StencilZFail); // Choice Rule
                 switch (tok.Type)
                 { // Choice Rule
                     case TokenType.VertexShader:
@@ -2571,6 +2573,12 @@ namespace MonoGame.Effect.TPGParser
                         break;
                     case TokenType.PixelShader:
                         ParsePixelShader_Pass_Expression(node); // NonTerminal Rule: PixelShader_Pass_Expression
+                        break;
+                    case TokenType.HullShader:
+                        ParseHullShader_Pass_Expression(node);
+                        break;
+                    case TokenType.DomainShader:
+                        ParseDomainShader_Pass_Expression(node);
                         break;
                     case TokenType.CullMode:
                     case TokenType.FillMode:
@@ -2600,7 +2608,7 @@ namespace MonoGame.Effect.TPGParser
                         tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected VertexShader, PixelShader, CullMode, FillMode, AlphaBlendEnable, SrcBlend, DestBlend, BlendOp, ColorWriteEnable, DepthBias, SlopeScaleDepthBias, ZEnable, ZWriteEnable, ZFunc, MultiSampleAntiAlias, ScissorTestEnable, StencilEnable, StencilFail, StencilFunc, StencilMask, StencilPass, StencilRef, StencilWriteMask, or StencilZFail.", 0x0002, tok));
                         break;
                 } // Choice Rule
-            tok = scanner.LookAhead(TokenType.VertexShader, TokenType.PixelShader, TokenType.CullMode, TokenType.FillMode, TokenType.AlphaBlendEnable, TokenType.SrcBlend, TokenType.DestBlend, TokenType.BlendOp, TokenType.ColorWriteEnable, TokenType.DepthBias, TokenType.SlopeScaleDepthBias, TokenType.ZEnable, TokenType.ZWriteEnable, TokenType.ZFunc, TokenType.MultiSampleAntiAlias, TokenType.ScissorTestEnable, TokenType.StencilEnable, TokenType.StencilFail, TokenType.StencilFunc, TokenType.StencilMask, TokenType.StencilPass, TokenType.StencilRef, TokenType.StencilWriteMask, TokenType.StencilZFail); // ZeroOrMore Rule
+            tok = scanner.LookAhead(TokenType.VertexShader, TokenType.PixelShader, TokenType.HullShader, TokenType.DomainShader, TokenType.CullMode, TokenType.FillMode, TokenType.AlphaBlendEnable, TokenType.SrcBlend, TokenType.DestBlend, TokenType.BlendOp, TokenType.ColorWriteEnable, TokenType.DepthBias, TokenType.SlopeScaleDepthBias, TokenType.ZEnable, TokenType.ZWriteEnable, TokenType.ZFunc, TokenType.MultiSampleAntiAlias, TokenType.ScissorTestEnable, TokenType.StencilEnable, TokenType.StencilFail, TokenType.StencilFunc, TokenType.StencilMask, TokenType.StencilPass, TokenType.StencilRef, TokenType.StencilWriteMask, TokenType.StencilZFail); // ZeroOrMore Rule
             }
 
              // Concat Rule
@@ -2797,6 +2805,64 @@ namespace MonoGame.Effect.TPGParser
 
             parent.Token.UpdateRange(node.Token);
         } // NonTerminalSymbol: PixelShader_Pass_Expression
+
+        private void ParseHullShader_Pass_Expression(ParseNode parent)
+        {
+            ParseExtendedShaderPassExpression(
+                parent,
+                TokenType.HullShader_Pass_Expression,
+                "HullShader_Pass_Expression",
+                TokenType.HullShader);
+        }
+
+        private void ParseDomainShader_Pass_Expression(ParseNode parent)
+        {
+            ParseExtendedShaderPassExpression(
+                parent,
+                TokenType.DomainShader_Pass_Expression,
+                "DomainShader_Pass_Expression",
+                TokenType.DomainShader);
+        }
+
+        private void ParseExtendedShaderPassExpression(
+            ParseNode parent,
+            TokenType expressionToken,
+            string expressionName,
+            TokenType shaderToken)
+        {
+            var node = parent.CreateNode(scanner.GetToken(expressionToken), expressionName);
+            parent.Nodes.Add(node);
+
+            var expectedTokens = new[]
+            {
+                shaderToken,
+                TokenType.Equals,
+                TokenType.Compile,
+                TokenType.ShaderModel,
+                TokenType.Identifier,
+                TokenType.OpenParenthesis,
+                TokenType.CloseParenthesis,
+                TokenType.Semicolon,
+            };
+
+            foreach (var expectedToken in expectedTokens)
+            {
+                var token = scanner.Scan(expectedToken);
+                var child = node.CreateNode(token, token.ToString());
+                node.Token.UpdateRange(token);
+                node.Nodes.Add(child);
+                if (token.Type != expectedToken)
+                {
+                    tree.Errors.Add(new ParseError(
+                        "Unexpected token '" + token.Text.Replace("\n", "") + "' found. Expected " + expectedToken + ".",
+                        0x1001,
+                        token));
+                    return;
+                }
+            }
+
+            parent.Token.UpdateRange(node.Token);
+        }
 
         private void ParseAddressMode_Clamp(ParseNode parent) // NonTerminalSymbol: AddressMode_Clamp
         {

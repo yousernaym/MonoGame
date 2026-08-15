@@ -2,6 +2,7 @@ using System;
 using Microsoft.Xna.Framework.Content.Pipeline;
 using NUnit.Framework;
 using Microsoft.Xna.Framework.Content.Pipeline.Processors;
+using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 #if DIRECTX
 using System.Collections.Generic;
@@ -87,6 +88,21 @@ namespace MonoGame.Tests.ContentPipeline
         }
 
         [Test]
+        public void BuildTessellationEffect()
+        {
+            var output = BuildEffect("Assets/Effects/Tessellation.fx", TargetPlatform.Windows);
+            var stages = ReadShaderStages(output.GetEffectCode());
+
+            Assert.That(stages, Is.EqualTo(new[]
+            {
+                ShaderStage.Pixel,
+                ShaderStage.Vertex,
+                ShaderStage.Hull,
+                ShaderStage.Domain,
+            }));
+        }
+
+        [Test]
         public void TestDefines()
         {
             Assert.DoesNotThrow(() => BuildEffect("Assets/Effects/DefinesTest.fx", TargetPlatform.Windows, "MACRO_DEFINE_TEST=3"));
@@ -110,7 +126,7 @@ namespace MonoGame.Tests.ContentPipeline
             BuildEffect(effectFile, TargetPlatform.Windows);
         }
 
-        private void BuildEffect(string effectFile, TargetPlatform targetPlatform, string defines = null)
+        private CompiledEffectContent BuildEffect(string effectFile, TargetPlatform targetPlatform, string defines = null)
         {
             var importerContext = new ImporterContext();
             var importer = new EffectImporter();
@@ -125,6 +141,57 @@ namespace MonoGame.Tests.ContentPipeline
             Assert.NotNull(output);
 
             // TODO: Should we test the writer?
+            return output;
+        }
+
+        private static ShaderStage[] ReadShaderStages(byte[] effectCode)
+        {
+            using (var reader = new BinaryReader(new MemoryStream(effectCode)))
+            {
+                Assert.That(new string(reader.ReadChars(4)), Is.EqualTo("MGFX"));
+                Assert.That(reader.ReadByte(), Is.EqualTo(12));
+                reader.ReadByte();
+                reader.ReadInt32();
+
+                var constantBufferCount = reader.ReadInt32();
+                for (var i = 0; i < constantBufferCount; i++)
+                {
+                    reader.ReadString();
+                    reader.ReadUInt16();
+                    var parameterCount = reader.ReadInt32();
+                    for (var p = 0; p < parameterCount; p++)
+                    {
+                        reader.ReadInt32();
+                        reader.ReadUInt16();
+                    }
+                }
+
+                var shaderCount = reader.ReadInt32();
+                var stages = new ShaderStage[shaderCount];
+                for (var i = 0; i < shaderCount; i++)
+                {
+                    stages[i] = (ShaderStage)reader.ReadByte();
+                    reader.ReadString();
+                    reader.ReadString();
+                    reader.ReadBytes(reader.ReadInt32());
+
+                    var samplerCount = reader.ReadByte();
+                    Assert.That(samplerCount, Is.Zero, "The probe effect should not contain samplers.");
+
+                    reader.ReadBytes(reader.ReadByte());
+
+                    var attributeCount = reader.ReadByte();
+                    for (var a = 0; a < attributeCount; a++)
+                    {
+                        reader.ReadString();
+                        reader.ReadByte();
+                        reader.ReadByte();
+                        reader.ReadInt16();
+                    }
+                }
+
+                return stages;
+            }
         }
     }
 }

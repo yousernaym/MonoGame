@@ -13,7 +13,7 @@ namespace MonoGame.Effect
 	{
 
         private const string Header = "MGFX";
-        internal const int Version = 11;
+        internal const int Version = 12;
         
         static int ComputeHash(Stream stream)
         {
@@ -94,11 +94,15 @@ namespace MonoGame.Effect
                         memWriter.Write(pass.name);
                         WriteAnnotations(memWriter, pass.annotation_handles);
 
-                        // Write the index for the vertex and pixel shaders.
+                        // Write the index for each programmable shader stage.
                         var vertexShader = GetShaderIndex(STATE_CLASS.VERTEXSHADER, pass.states);
                         var pixelShader = GetShaderIndex(STATE_CLASS.PIXELSHADER, pass.states);
+                        var hullShader = GetShaderIndex(STATE_CLASS.HULLSHADER, pass.states);
+                        var domainShader = GetShaderIndex(STATE_CLASS.DOMAINSHADER, pass.states);
                         memWriter.Write(vertexShader);
                         memWriter.Write(pixelShader);
+                        memWriter.Write(hullShader);
+                        memWriter.Write(domainShader);
 
                         // Write the state objects too!
                         if (pass.blendState != null)

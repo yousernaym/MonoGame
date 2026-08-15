@@ -82,6 +82,14 @@ namespace MonoGame.Effect.TPGParser
             Patterns.Add(TokenType.PixelShader, regex);
             Tokens.Add(TokenType.PixelShader);
 
+            regex = new Regex(@"HullShader", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Patterns.Add(TokenType.HullShader, regex);
+            Tokens.Add(TokenType.HullShader);
+
+            regex = new Regex(@"DomainShader", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Patterns.Add(TokenType.DomainShader, regex);
+            Tokens.Add(TokenType.DomainShader);
+
             regex = new Regex(@"register", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             Patterns.Add(TokenType.Register, regex);
             Tokens.Add(TokenType.Register);
@@ -808,6 +816,13 @@ namespace MonoGame.Effect.TPGParser
             ShaderModel= 139,
             Code    = 140,
             EndOfFile= 141,
+
+            // Tessellation shader extensions. Appended to preserve the generated
+            // numeric values used by the existing parser tokens.
+            HullShader_Pass_Expression= 226,
+            DomainShader_Pass_Expression= 227,
+            HullShader= 228,
+            DomainShader= 229,
             MinFilter= 142,
             MagFilter= 143,
             MipFilter= 144,

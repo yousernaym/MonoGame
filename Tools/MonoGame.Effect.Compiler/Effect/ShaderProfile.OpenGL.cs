@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Effect.TPGParser;
 
 namespace MonoGame.Effect
@@ -28,6 +29,9 @@ namespace MonoGame.Effect
 
         internal override void ValidateShaderModels(PassInfo pass)
         {
+            if (!string.IsNullOrEmpty(pass.hsFunction) || !string.IsNullOrEmpty(pass.dsFunction))
+                throw new NotSupportedException("Hull and domain shaders are only supported by the DirectX_11 profile.");
+
             int major, minor;
 
             if (!string.IsNullOrEmpty(pass.vsFunction))
@@ -45,14 +49,14 @@ namespace MonoGame.Effect
             }
         }
 
-        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings)
+        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, ShaderStage shaderStage, EffectObject effect, ref string errorsAndWarnings)
         {
             // For now GLSL is only supported via translation
             // using MojoShader which works from HLSL bytecode.
             var bytecode = EffectObject.CompileHLSL(shaderResult, shaderFunction, shaderProfile, ref errorsAndWarnings);
 
             var shaderInfo = shaderResult.ShaderInfo;
-            var shaderData = ShaderData.CreateGLSL(bytecode, isVertexShader, effect.ConstantBuffers, effect.Shaders.Count, shaderInfo.SamplerStates, shaderResult.Debug);
+            var shaderData = ShaderData.CreateGLSL(bytecode, shaderStage, effect.ConstantBuffers, effect.Shaders.Count, shaderInfo.SamplerStates, shaderResult.Debug);
             effect.Shaders.Add(shaderData);
 
             return shaderData;

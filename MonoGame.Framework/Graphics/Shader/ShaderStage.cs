@@ -8,6 +8,8 @@ namespace Microsoft.Xna.Framework.Graphics
     {
         Vertex,
         Pixel,
+        Hull,
+        Domain,
 
         Count,
     }

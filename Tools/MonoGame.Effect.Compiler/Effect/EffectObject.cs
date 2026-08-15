@@ -196,6 +196,8 @@ namespace MonoGame.Effect
 			VERTEXSHADER,
 			PIXELFRAGMENT,
 			VERTEXFRAGMENT,
+			HULLSHADER,
+			DOMAINSHADER,
 			UNSUPPORTED,
 			FORCE_DWORD = 0x7fffffff,
 		}
@@ -235,6 +237,8 @@ namespace MonoGame.Effect
 		    TRANSFORM,
 		    VERTEXSHADER,
 		    SHADERCONST,
+		    HULLSHADER,
+		    DOMAINSHADER,
 		    UNKNOWN,
 		};
 
@@ -527,6 +531,10 @@ namespace MonoGame.Effect
 			new state_info(STATE_CLASS.VERTEXSHADER, 0, "Vertexshader"),
 			/* Pixelshader */
 			new state_info(STATE_CLASS.PIXELSHADER, 0, "Pixelshader"),
+			/* Hull shader */
+			new state_info(STATE_CLASS.HULLSHADER, 0, "HullShader"),
+			/* Domain shader */
+			new state_info(STATE_CLASS.DOMAINSHADER, 0, "DomainShader"),
 			/* Shader constants */
 			new state_info(STATE_CLASS.SHADERCONST, (uint)SHADER_CONSTANT_TYPE.VSFLOAT, "VertexShaderConstantF"),
 			new state_info(STATE_CLASS.SHADERCONST, (uint)SHADER_CONSTANT_TYPE.VSBOOL, "VertexShaderConstantB"),
@@ -682,20 +690,32 @@ namespace MonoGame.Effect
                     pass.rasterizerState = pinfo.rasterizerState;
 
                     pass.state_count = 0;
-                    var tempstate = new d3dx_state[2];
+                    var tempstate = new d3dx_state[4];
 
                     shaderResult.Profile.ValidateShaderModels(pinfo);
 
                     if (!string.IsNullOrEmpty(pinfo.psFunction))
                     {
                         pass.state_count += 1;
-                        tempstate[pass.state_count - 1] = effect.CreateShader(shaderResult, pinfo.psFunction, pinfo.psModel, false, ref errorsAndWarnings);
+                        tempstate[pass.state_count - 1] = effect.CreateShader(shaderResult, pinfo.psFunction, pinfo.psModel, ShaderStage.Pixel, ref errorsAndWarnings);
                     }
 
                     if (!string.IsNullOrEmpty(pinfo.vsFunction))
                     {
                         pass.state_count += 1;
-                        tempstate[pass.state_count - 1] = effect.CreateShader(shaderResult, pinfo.vsFunction, pinfo.vsModel, true, ref errorsAndWarnings);
+                        tempstate[pass.state_count - 1] = effect.CreateShader(shaderResult, pinfo.vsFunction, pinfo.vsModel, ShaderStage.Vertex, ref errorsAndWarnings);
+                    }
+
+                    if (!string.IsNullOrEmpty(pinfo.hsFunction))
+                    {
+                        pass.state_count += 1;
+                        tempstate[pass.state_count - 1] = effect.CreateShader(shaderResult, pinfo.hsFunction, pinfo.hsModel, ShaderStage.Hull, ref errorsAndWarnings);
+                    }
+
+                    if (!string.IsNullOrEmpty(pinfo.dsFunction))
+                    {
+                        pass.state_count += 1;
+                        tempstate[pass.state_count - 1] = effect.CreateShader(shaderResult, pinfo.dsFunction, pinfo.dsModel, ShaderStage.Domain, ref errorsAndWarnings);
                     }
 
                     pass.states = new d3dx_state[pass.state_count];
@@ -793,14 +813,14 @@ namespace MonoGame.Effect
         }
 
 
-        private d3dx_state CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, ref string errorsAndWarnings)
+        private d3dx_state CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, ShaderStage shaderStage, ref string errorsAndWarnings)
         {
             // Check if this shader has already been created.
-            var shaderData = Shaders.Find(shader => shader.Entrypoint == shaderFunction && shader.ShaderProfile == shaderProfile);
+            var shaderData = Shaders.Find(shader => shader.Entrypoint == shaderFunction && shader.ShaderProfile == shaderProfile && shader.Stage == shaderStage);
             if (shaderData == null)
             {
                 // Compile and create the shader.
-                shaderData = shaderResult.Profile.CreateShader(shaderResult, shaderFunction, shaderProfile, isVertexShader, this, ref errorsAndWarnings);
+                shaderData = shaderResult.Profile.CreateShader(shaderResult, shaderFunction, shaderProfile, shaderStage, this, ref errorsAndWarnings);
                 shaderData.SourceFile = shaderResult.RelativeFilePath;
                 shaderData.Entrypoint = shaderFunction;
                 shaderData.ShaderProfile = shaderProfile;
@@ -809,16 +829,36 @@ namespace MonoGame.Effect
             var state = new d3dx_state();
             state.index = 0;
             state.type = STATE_TYPE.CONSTANT;
-            state.operation = isVertexShader ? (uint)146 : (uint)147;
 
             state.parameter = new d3dx_parameter();
             state.parameter.name = string.Empty;
             state.parameter.semantic = string.Empty;
             state.parameter.class_ = D3DXPARAMETER_CLASS.OBJECT;
-            state.parameter.type = isVertexShader ? D3DXPARAMETER_TYPE.VERTEXSHADER : D3DXPARAMETER_TYPE.PIXELSHADER;
             state.parameter.rows = 0;
             state.parameter.columns = 0;
             state.parameter.data = shaderData.SharedIndex;
+
+            switch (shaderStage)
+            {
+                case ShaderStage.Vertex:
+                    state.operation = 146;
+                    state.parameter.type = D3DXPARAMETER_TYPE.VERTEXSHADER;
+                    break;
+                case ShaderStage.Pixel:
+                    state.operation = 147;
+                    state.parameter.type = D3DXPARAMETER_TYPE.PIXELSHADER;
+                    break;
+                case ShaderStage.Hull:
+                    state.operation = 148;
+                    state.parameter.type = D3DXPARAMETER_TYPE.HULLSHADER;
+                    break;
+                case ShaderStage.Domain:
+                    state.operation = 149;
+                    state.parameter.type = D3DXPARAMETER_TYPE.DOMAINSHADER;
+                    break;
+                default:
+                    throw new NotSupportedException($"Shader stage '{shaderStage}' is not supported by MGFX.");
+            }
 
             return state;
         }

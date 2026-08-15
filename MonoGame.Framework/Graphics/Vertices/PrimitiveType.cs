@@ -32,6 +32,11 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <summary>
         /// Renders the vertices as individual points; the count may be any positive integer.
         /// </summary>
-        PointList
+        PointList,
+
+        /// <summary>
+        /// Renders each group of four vertices as a tessellation patch. A hull and domain shader must be active.
+        /// </summary>
+        PatchListWith4ControlPoints
     }
 }

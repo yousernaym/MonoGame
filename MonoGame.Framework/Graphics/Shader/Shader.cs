@@ -105,8 +105,10 @@ namespace Microsoft.Xna.Framework.Graphics
         {
             GraphicsDevice = device;
 
-            var isVertexShader = reader.ReadBoolean();
-            Stage = isVertexShader ? ShaderStage.Vertex : ShaderStage.Pixel;
+            if (version >= 12)
+                Stage = (ShaderStage)reader.ReadByte();
+            else
+                Stage = reader.ReadBoolean() ? ShaderStage.Vertex : ShaderStage.Pixel;
 
             if (version > 10)
             {
